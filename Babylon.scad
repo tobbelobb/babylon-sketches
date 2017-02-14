@@ -123,23 +123,24 @@ module tower(){
   module door(){
   y = 15;
   x = 5;
-  z = profile_h*profile_slope_factor-y/2.5;
-  translate([-x/2,0,-z-y/2])
+  z = profile_h*profile_slope_factor-y/2;
+  translate([-x/2,-y/2,-profile_h*profile_slope_factor+gap+0.5])
     cube([x,y,z]);
-  translate([0,y/2,-y/2])
+  translate([0,0,-y/2+1])
     scale([1,1,0.5])
     rotate([0,90,0])
     cylinder(d=y, h=x, center=true);
   }
 
   module doors(){
-    for (v_0=[360:2*s:360*2 + 1*360]){
+    for (v_0=[360*2:2*s:360*2 + 15*360]){
       rotate([0,0,v_0])
       translate([
            r(v_0),
            0,
-           (1+(move_upwards(v_0) - move_upwards(v_0-360))/(profile_slope_factor*profile_h))*h(v_0)])  
+           h(v_0)])  
       rotate([0,0,2])
+        scale([1,0.5+0.5*(move_inwards(v_0)-move_inwards(v_0-360))/profile_l,1+(move_upwards(v_0) - move_upwards(v_0-360))/(profile_slope_factor*profile_h)])
       door();
     }
   }
@@ -147,28 +148,29 @@ module tower(){
   module doorless_tower(){
     difference(){
       sweep(profile_0, path_0);
-      %doors();
+
+      #doors();
     }
-//    rotate([0,0,-45])
-//        difference(){
-//          sweep(profile_1, path_1);
-//          translate([-6,3,-1])
-//            cylinder(r1=220,r2=192,h=profile_h*3);
-//        }
-//    rotate([0,0,90]){
-//      sweep(profile_2_a_inshoot, path_2_ab_mirrored);
-//      sweep(profile_2_b_inshoot, path_2_ab_mirrored);
-//      //sweep(profile_2, path_2_ab_mirrored);
-//    }
-//    rotate([0,0,90+45]){
-//      sweep(profile_2_a_inshoot, path_2_ab);
-//      sweep(profile_2_b_inshoot, path_2_ab);
-//      //sweep(profile_2, path_2_ab);
-//    }
+    rotate([0,0,-45])
+        difference(){
+          sweep(profile_1, path_1);
+          translate([-6,3,-1])
+            cylinder(r1=220,r2=192,h=profile_h*3);
+        }
+    rotate([0,0,90]){
+      sweep(profile_2_a_inshoot, path_2_ab_mirrored);
+      sweep(profile_2_b_inshoot, path_2_ab_mirrored);
+      //sweep(profile_2, path_2_ab_mirrored);
+    }
+    rotate([0,0,90+45]){
+      sweep(profile_2_a_inshoot, path_2_ab);
+      sweep(profile_2_b_inshoot, path_2_ab);
+      //sweep(profile_2, path_2_ab);
+    }
   }
   scale([1,1,4])
   doorless_tower();
-
+  //import("sketch_24_placement_helper.stl");
   
   
   //difference(){
