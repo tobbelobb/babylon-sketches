@@ -5,9 +5,20 @@ module tower(){
   profile_h = 17;
   profile_slope_factor = 1.1;
   bottom_radius = 300;
-  rounds_0 = 41;
+  rounds_0 = 75;
+  rounds_ab = 60;
   extra_rounds = 3;
   gap = 0.01;
+  s = 13;
+  outshoot = 45;
+  spike_ang = s/5;
+  inshoot = 8 + spike_ang;
+  echo(inshoot);
+  scalefac = 1.4;
+  small_d = 2.2*profile_l;
+  echo(small_d);
+  spikelim = 0.6;
+
   // Height = profile_h * profile_slope_factor
   // Width = profile_l
   profile_0 = [
@@ -21,15 +32,11 @@ module tower(){
   //path = [translation([0,0,0]),translation([0,10,0])];
   //!sweep(profile_0 , path);
 
-  s = 13;
-  outshoot = 45;
-  inshoot = 8;
-  scalefac = 1.4;
   profile_1 = [for (v=[0:s:360-s])
                 [(bottom_radius-scalefac*profile_l)*cos(v),
                  (bottom_radius-scalefac*profile_l)*sin(v),
                  0]];
-  profile_2_a = [for (v=[-10:s:10])
+  profile_2_a = [for (v=[-10:s/4:10])
                   [(bottom_radius-scalefac*profile_l)*cos(v) + outshoot*sin((v+10)*180/20),
                    (bottom_radius-scalefac*profile_l)*sin(v),
                     0]];
@@ -41,7 +48,7 @@ module tower(){
       [[(bottom_radius-scalefac*profile_l)*cos(10) - inshoot,
       (bottom_radius-scalefac*profile_l)*sin(10),
       0]]);
-  profile_2_b = [for (v=[170:s:190])
+  profile_2_b = [for (v=[170:s/4:190])
                   [(bottom_radius-scalefac*profile_l)*cos(v) - outshoot*sin((v-170)*180/20),
                    (bottom_radius-scalefac*profile_l)*sin(v),
                    0]];
@@ -64,43 +71,36 @@ module tower(){
   function r(v) = bottom_radius - move_inwards(v);
   //(bottom_radius-profile_l)*(move_inwards(v+360)-move_inwards(v))/profile_l;
 
-  path_0 = [for (v_0=[360:s:rounds_0*360])
-    for(extr = [-s/5:s/20:s/5])
+  function retract_spikes(v) = abs(v) > spikelim ?
+                               5*sqrt(3*abs(v)) :
+                               5*sqrt(3*abs(spikelim)) + 15*(cos(v) - cos(spikelim));
+
+  path_0 = [for (v_0=[360+spike_ang:s:rounds_0*360])
+    for(extr = [-spike_ang:s/20:spike_ang])
     rotation([0,0,v_0+extr]) *
-    translation([move_inwards(v_0+extr) < bottom_radius - 2.5*profile_l ?
-                 r(v_0) - 5*sqrt(3*abs(extr)):
-                 2.5*profile_l,
+    translation([move_inwards(v_0+extr) < bottom_radius - small_d ?
+                 r(v_0) - ((move_inwards(v_0)-move_inwards(v_0-360))/profile_l)*retract_spikes(extr):
+                 max(r(v_0) - ((move_inwards(v_0)-move_inwards(v_0-360))/profile_l)*retract_spikes(extr), small_d - ((move_inwards(v_0)-move_inwards(v_0-360))/profile_l)*retract_spikes(spike_ang)),
                  0,
                  h(v_0+extr)]) *
     scaling([(move_inwards(v_0)-move_inwards(v_0-360))/profile_l,
                  1,
              1+(move_upwards(v_0+extr) - move_upwards(v_0+extr-360))/(profile_slope_factor*profile_h)]) *
     translation([profile_l,0,0])
-    //,
-    //rotation([0,0,v_0+s/3]) *
-    //translation([move_inwards(v_0+s/3) < bottom_radius - 2.5*profile_l ?
-    //             r(v_0+s/3):
-    //             2.5*profile_l,
-    //             0,
-    //             h(v_0+s/3)]) *
-    //scaling([(move_inwards(v_0+s/3)-move_inwards(v_0+s/3-360))/profile_l,
-    //             1,
-    //         1+(move_upwards(v_0+s/3) - move_upwards(v_0+s/3-360))/(profile_slope_factor*profile_h)]) *
-    //translation([profile_l,0,0])
     ];
 
 
   function spiral(rounds, spiraling_factor = 1) =
-    [for (v_1=[0:80:rounds*360])
+    [for (v_1=[0:40:rounds*360])
     rotation([0,0,spiraling_factor*(h(v_1)/(r(v_1)+outshoot))*4*170/(PI)]) *
       translation([0,0,
           h(v_1)]) *
-      scaling([move_inwards(v_1) < bottom_radius - 2.5*profile_l ?
-          r(v_1)/(bottom_radius-(1.0*profile_l)) :
-          2.5*profile_l/(bottom_radius-(1.0*profile_l)),
-          move_inwards(v_1) < bottom_radius - 2.5*profile_l ?
-          r(v_1)/(bottom_radius-(1.0*profile_l)) :
-          2.5*profile_l/(bottom_radius-(1.0*profile_l)),
+      scaling([move_inwards(v_1) < bottom_radius - small_d ?
+          (r(v_1))/(bottom_radius-(1.0*profile_l)) :
+          (small_d)/(bottom_radius-(1.0*profile_l)),
+          move_inwards(v_1) < bottom_radius - small_d ?
+          (r(v_1))/(bottom_radius-(1.0*profile_l)) :
+          (small_d)/(bottom_radius-(1.0*profile_l)),
           1])];
 
   infillrounds = 1.2;
@@ -108,8 +108,8 @@ module tower(){
   //path_1 = spiral(rounds_0 + extra_rounds);
   path_1 = spiral(infillrounds);
   //path_2 = spiral(infillrounds);
-  path_2_ab = spiral(rounds_0);
-  path_2_ab_mirrored = spiral(rounds_0, -1);
+  path_2_ab = spiral(rounds_ab);
+  path_2_ab_mirrored = spiral(rounds_ab, -1);
   //path_2_ab = spiral(rounds_0);
 
   //for(v=[0:s:360]){
@@ -137,6 +137,15 @@ module tower(){
     sweep(profile_2_b_inshoot, path_2_ab);
     //sweep(profile_2, path_2_ab);
   }
+  
+  /*
+  translate([0,0,h((rounds_0-1)*360)])
+  difference(){
+    cylinder(r=21, h=1000);
+    translate([0,0,-1])
+      cylinder(r=19, h=1002);
+  }
+  */
 }
 scale([1,1,4])
 tower();
