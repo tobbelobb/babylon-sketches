@@ -6,7 +6,7 @@ module tower(){
   profile_slope_factor = 1.1;
   bottom_radius = 300;
   rounds_0 = 75;
-  //rounds_0 = 7;
+  //rounds_0 = 2;
   rounds_ab = 60;
   //rounds_ab = 6;
   extra_rounds = 3;
@@ -119,56 +119,66 @@ module tower(){
   //  transform(v, to_3d(profile_2_a));
   //}
 
-  module doorless_tower(){
-    sweep(profile_0, path_0);  
-    rotate([0,0,-45])
-        difference(){
-          sweep(profile_1, path_1);
-          translate([-6,3,-1])
-            cylinder(r1=220,r2=192,h=profile_h*3);
-        }
-    rotate([0,0,90]){
-      sweep(profile_2_a_inshoot, path_2_ab_mirrored);
-      sweep(profile_2_b_inshoot, path_2_ab_mirrored);
-      //sweep(profile_2, path_2_ab_mirrored);
-    }
-    rotate([0,0,90+45]){
-      sweep(profile_2_a_inshoot, path_2_ab);
-      sweep(profile_2_b_inshoot, path_2_ab);
-      //sweep(profile_2, path_2_ab);
-    }
-  }
-  //scale([1,1,4])
-  //doorless_tower();
   
   module door(){
   y = 15;
   x = 5;
-  z = profile_h*profile_slope_factor-y/3;
-  translate([-x/2,-y/2,-z-y/2])
+  z = profile_h*profile_slope_factor-y/2.5;
+  translate([-x/2,0,-z-y/2])
     cube([x,y,z]);
-  translate([0,0,-y/2])
+  translate([0,y/2,-y/2])
     scale([1,1,0.5])
     rotate([0,90,0])
     cylinder(d=y, h=x, center=true);
   }
 
   module doors(){
-    for (v_0=[360*2:2*s:360 + 2*360]){
+    for (v_0=[360:2*s:360*2 + 1*360]){
       rotate([0,0,v_0])
       translate([
            r(v_0),
            0,
-           (1+(move_upwards(v_0) - move_upwards(v_0-360))/(profile_slope_factor*profile_h))*h(v_0)])
+           (1+(move_upwards(v_0) - move_upwards(v_0-360))/(profile_slope_factor*profile_h))*h(v_0)])  
+      rotate([0,0,2])
       door();
     }
   }
-  
-  scale([1,1,4])
-  difference(){
-    doors();
-     doorless_tower();
+
+  module doorless_tower(){
+    difference(){
+      sweep(profile_0, path_0);
+      %doors();
+    }
+//    rotate([0,0,-45])
+//        difference(){
+//          sweep(profile_1, path_1);
+//          translate([-6,3,-1])
+//            cylinder(r1=220,r2=192,h=profile_h*3);
+//        }
+//    rotate([0,0,90]){
+//      sweep(profile_2_a_inshoot, path_2_ab_mirrored);
+//      sweep(profile_2_b_inshoot, path_2_ab_mirrored);
+//      //sweep(profile_2, path_2_ab_mirrored);
+//    }
+//    rotate([0,0,90+45]){
+//      sweep(profile_2_a_inshoot, path_2_ab);
+//      sweep(profile_2_b_inshoot, path_2_ab);
+//      //sweep(profile_2, path_2_ab);
+//    }
   }
+  scale([1,1,4])
+  doorless_tower();
+
+  
+  
+  //difference(){
+//    %import("sketch_23.stl");
+//    scale([1,1,4])
+//      doorless_tower();
+//    scale([1,1,4])
+//      #doors();
+  //}
+
 }
 tower();
 
