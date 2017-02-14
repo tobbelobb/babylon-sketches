@@ -133,7 +133,7 @@ module tower(){
   }
 
   module doors(){
-    for (v_0=[360*2:2*s:360*2 + 15*360]){
+    for (v_0=[360*2:s:360*2 + 15*360]){
       rotate([0,0,v_0])
       translate([
            r(v_0),
